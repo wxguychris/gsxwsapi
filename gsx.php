@@ -201,6 +201,46 @@ class GSX {
 		'WH' ,
 		'CA'
 	);
+
+    /**
+     *
+     * Valid Invoice Lookup
+     *
+     * This array contains all the variables we can search for in
+     * the InvoiceIDLookup function of the GSX Web Services API.
+     *
+     * @var array Array of the valid variables for Invoice ID Lookup
+     *
+     * @see $this->invoice_lookup
+     *
+     * @access protected
+     *
+     */
+    protected $validInvoiceLookup = array (
+        'shipTo',
+        'invoiceDate',
+    );
+
+    /**
+     *
+     * Valid Invoice Types
+     *
+     * This array contains all possible invoice types in a GSX invoice
+     *
+     * @var array Array of the valid Invoice Types
+     *
+     * @see $this->invoice_lookup()
+     *
+     * @access protected
+     *
+     */
+    protected $validInvoiceStatus = array (
+        'AC Rep-Credit Memo' ,
+        'AC Rep-Credit Oth' ,
+        'AC Rep-Debit Memo' ,
+        'AC-Service Rep. Inv',
+        'Invoice' ,
+    );
 	
 	/**
 	 *
@@ -424,6 +464,7 @@ class GSX {
 		// Set the timeout to 10 seconds.
 		$connectionOptions = array (
 			'connection_timeout' => '5' ,
+			'trace'	=> true,
 		);
 		
 		try {
@@ -611,7 +652,7 @@ class GSX {
 				
 				$repairLookup = $this->request ( $requestData , $clientLookup );
 				
-				//$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
+				$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
 				
 				return $this->outputFormat ( $repairLookup , $errorMessage , $returnFormat);
 				
@@ -619,28 +660,122 @@ class GSX {
 			
 			/*! Repair Details */
 			case 'details' :
-			
 				$clientLookup = 'RepairDetails';
 				$requestName = $clientLookup . 'Request';
 				$wrapperName = 'dispatchId';
 				$details = $params;
-				
+
 				$requestData = $this->_requestBuilder ( $requestName , $wrapperName , $details );
-				
+
 				$repairLookup = $this->request ( $requestData , $clientLookup );
-				
-				//$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
-				
+
+				$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
+
 				return $this->outputFormat ( $repairLookup['RepairDetailsResponse']['lookupResponseData'] , $errorMessage , $returnFormat);
-			
-			break;
+
+				break;
 			
 			/*! Repair Details Lookup */
 			case 'details-lookup' :
-			
-			break;
+
+				$clientLookup = 'RepairDetailsLookup';
+				$requestName = $clientLookup . 'Request';
+				$wrapperName = 'repairConfirmationNumber';
+				$details = $params;
+
+				$requestData = $this->_requestBuilder ( $requestName , $wrapperName , $details );
+
+				$repairLookup = $this->request ( $requestData , $clientLookup );
+
+				$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
+
+				return $this->outputFormat ( $repairLookup['RepairDetailsLookupResponse']['repairDetails'] , $errorMessage , $returnFormat);
+
+				break;
 		}
 	}
+
+    public function invoices( $type , $params , $returnFormat = false ) {
+        switch ( $type ) {
+            /*! Invoice Lookup */
+            case 'lookup' :
+            default :
+                $clientLookup = 'InvoiceIDLookup';
+                $requestName = $clientLookup . 'Request';
+                $wrapperName = 'lookupRequestData';
+
+                $details = $params;
+
+                $requestData = $this->_requestBuilder( $requestName, $wrapperName, $details );
+                $invoiceLookup = $this->request( $requestData, $clientLookup );
+
+                $errorMessage = $this->_obtainErrorMessage ( $invoiceLookup );
+
+                return $this->outputFormat( $invoiceLookup , $errorMessage , $returnFormat );
+
+            break;
+
+            /*! Invoice Details */
+            case 'details' :
+                $clientLookup = 'InvoiceDetailsLookup';
+                $requestName = $clientLookup . 'Request';
+                $wrapperName = 'lookupRequestData';
+
+                $details = $params;
+
+                $requestData = $this->_requestBuilder( $requestName, $wrapperName, $details );
+                $invoiceLookup = $this->request( $requestData, $clientLookup );
+
+                $errorMessage = $this->_obtainErrorMessage ( $invoiceLookup );
+
+                return $this->outputFormat( $invoiceLookup['InvoiceDetailsLookupResponse']['lookupResponseData'] , $errorMessage , $returnFormat );
+            break;
+        }
+    }
+
+    public function stockingorders( $type , $params , $returnFormat = false) {
+        switch( $type ) {
+            /*! Stocking order lookup */
+            case 'lookup' :
+            default :
+                $clientLookup = 'StockingOrderLookup';
+                $requestName = $clientLookup . 'Request';
+//				$clientLookup = 'StockingOrderLookupRequest';
+//                $requestName = $clientLookup;
+
+                $wrapperName = 'lookupRequestData';
+
+                $details = $params;
+
+                $requestData = $this->_requestBuilder( $requestName, $wrapperName, $details );
+//                var_dump($requestData);
+//                die();
+
+                $stockingLookup = $this->request( $requestData, $clientLookup );
+//var_dump($stockingLookup);
+                $errorMessage = $this->_obtainErrorMessage ( $stockingLookup );
+
+                return $this->outputFormat( $stockingLookup , $errorMessage , $returnFormat );
+
+                break;
+
+            /*! Invoice Details */
+            case 'details' :
+                $clientLookup = 'StockingOrderDetailsLookup';
+                $requestName = $clientLookup . 'Request';
+                $wrapperName = 'lookupRequestData';
+
+                $details = $params;
+
+                $requestData = $this->_requestBuilder( $requestName, $wrapperName, $details );
+                $invoiceLookup = $this->request( $requestData, $clientLookup );
+
+                //$errorMessage = $this->_obtainErrorMessage ( $repairLookup );
+
+                return $this->outputFormat( $invoiceLookup['InvoiceDetailsLookupResponse']['lookupResponseData'] , $errorMessage , $returnFormat );
+                break;
+        }
+    }
 	
 	/**
 	 *
@@ -715,13 +850,17 @@ class GSX {
 		if ( !$clientLookup || !is_string ( $clientLookup ) ) {
 			$this->error ( __METHOD__ , __LINE__ , 'Invalid data passed: ' . $clientLookup );
 		}
-		
+
+
 		try {
 			$SOAPRequest = $this->soapClient->$clientLookup ( $requestData );
+
 		} catch ( SoapFault $f ) {
+//			var_dump($this->soapClient->__getLastRequest());
+//			var_dump($this->soapClient->__getLastResponse());
 			return $this->soap_error ( $f->faultcode , $f->faultstring );
 		}
-		
+
 		return $this->_objToArr ( $SOAPRequest );
 	}
 		
@@ -806,12 +945,15 @@ class GSX {
 	}
 	
 	private function _obtainErrorMessage ( $output ) {
-		function _softErrorMessage ( $value , $key ) {
-			if ( isset ( $key ) == 'communicationMessage' ) {
-				$softError = $value;
+		if(!function_exists('_softErrorMessage'))
+		{
+			function _softErrorMessage($value, $key)
+			{
+				if (isset ($key) == 'communicationMessage') {
+					$softError = $value;
+				}
 			}
 		}
-		
 		array_walk ( $output , '_softErrorMessage' );
 		
 		return isset ( $softError ) ? $softError : '';
